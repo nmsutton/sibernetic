@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <math.h>       /* sqrt */
 
 using namespace std;
 
@@ -25,7 +26,25 @@ struct downsampled_mesh {
 original_mesh orig_mesh;
 downsampled_mesh downs_mesh;
 
-const int DOWNS_MESH_VERTS = sizeof(downs_mesh.x)/sizeof(downs_mesh.x[0]);  // from http://stackoverflow.com/questions/2037736/finding-size-of-int-array
+const int ORIG_MESH_VERTS = sizeof(orig_mesh.x)/sizeof(orig_mesh.x[0]);  // from http://stackoverflow.com/questions/2037736/finding-size-of-int-array
+const int DOWNS_MESH_VERTS = sizeof(downs_mesh.x)/sizeof(downs_mesh.x[0]);
+
+double find_euclidean_dist(double x_1, double y_1, double z_1, double x_2, double y_2, double z_2) {
+	/*
+	 * https://en.wikipedia.org/wiki/Euclidean_distance
+	 */
+	double distance = sqrt(pow((x_2-x_1),2)+pow((y_2-y_1),2)+pow((z_2-z_1),2));
+	return distance;
+}
+
+double weight_update_formula(double orig_coord, double downs_weight, double bmu_dist, double alpha) {
+	/*
+	 * SOM formula:
+	 * Wv(s + 1) = Wv(s) + Θ(u, v, s) α(s)(D(t) - Wv(s))
+	 */
+	double weight = downs_weight + bmu_dist * alpha * (orig_coord - downs_weight);
+	return weight;
+}
 
 void downsample_mesh() {
 	/*
@@ -33,25 +52,64 @@ void downsample_mesh() {
 
 	from: https://en.wikipedia.org/wiki/Self-organizing_map
 
-	s is the current iteration
-	L is the iteration limit
-	t is the index of the target input data vector in the input data set \mathbf{D}
-	D(t) is a target input data vector
-	v is the index of the node in the map
-	W_v is the current weight vector of node v
-	u is the index of the best matching unit (BMU) in the map
-	Θ(u, v, s) is a restraint due to distance from BMU, usually called the neighborhood function, and
-	α (s) is a learning restraint due to iteration progress.
+	s = the current iteration, a.k.a. the 'step' of the computations
+	L = the iteration limit
+	t = the index of the target input data vector in the input data set D
+	IV = number of input vector verticies
+	T = number of verticies in input vector
+	D(t) = a target input data vector
+	v = the index of the node in the map (map being the vectors to map the input vector onto)
+	W_v = the current weight vector of node v
+	u = the index of the best matching unit (BMU) in the map for D(t) (the input vector)
+	bmu_dist = Θ(u, v, s) = a restraint due to distance from BMU, usually called the neighborhood function
+	the neighborhood function gives the distance between the neuron u and the neuron v in step s
+	α(s) = a learning restraint due to iteration progress.
 
+	SOM formula:
 	Wv(s + 1) = Wv(s) + Θ(u, v, s) α(s)(D(t) - Wv(s))
+
+	TODO: Stop running algorithm once it reaches a convergence level instead of just the maximum L
+
+	W is initialized as 1s for now, if wanted later work could address "The weights of the neurons
+	are initialized either to small random values or sampled evenly from the subspace spanned by
+	the two largest principal component eigenvectors."
+
+	first BMU is found for each vertex
+	second bmu_dist is used to update SOM weights
 	 */
 
-	double W[DOWNS_MESH_VERTS];
-	int s = 0, t = 0, v = 0, u = 0, theta = 0, alpha = 0;
+	struct W {
+		double x[DOWNS_MESH_VERTS];
+		double y[DOWNS_MESH_VERTS];
+		double z[DOWNS_MESH_VERTS];
+	};
+	int s = 0, t = 0, v = 0, u = 0;
 	int L = 10;
+	int IV = ORIG_MESH_VERTS;
+	int T = DOWNS_MESH_VERTS;
+	double alpha = 1.0;
+	double new_dist = 0;
+	double bmu_dist = 0;
 
-	for (int i = 0; i < DOWNS_MESH_VERTS; i++) {
+	W W;
 
+	for (int map_i = 0; map_i < T; map_i++) {W.x[map_i] = 1; W.y[map_i] = 1; W.z[map_i] = 1;}
+
+	for (int L_i = 0; L_i < L; L_i++) {
+		for (int in_i = 0; in_i < IV; IV++) {
+			u = 0;
+			new_dist = 0;
+			bmu_dist = find_euclidean_dist(orig_mesh.x[0], orig_mesh.y[0], orig_mesh.z[0], downs_mesh.x[0], downs_mesh.y[0], downs_mesh.z[0]); // reinitialize
+
+			for (int map_i = 0; map_i < T; map_i++) {
+				new_dist = find_euclidean_dist(orig_mesh.x[in_i], orig_mesh.y[in_i], orig_mesh.z[in_i], downs_mesh.x[map_i], downs_mesh.y[map_i], downs_mesh.z[map_i]);
+				if (new_dist < bmu_dist) {bmu_dist = new_dist; u = in_i;}
+
+				W.x[map_i] = weight_update_formula(W.x[map_i], orig_mesh.x[in_i], bmu_dist, alpha);
+				W.y[map_i] = weight_update_formula(W.y[map_i], orig_mesh.y[in_i], bmu_dist, alpha);
+				W.z[map_i] = weight_update_formula(W.z[map_i], orig_mesh.z[in_i], bmu_dist, alpha);
+			}
+		}
 	}
 }
 
