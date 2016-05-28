@@ -153,6 +153,10 @@ private:
 	//Needed for sorting stuff
 	int * _particleIndex;
 	int * gridNextNonEmptyCellBuffer;
+	double wave;
+	double wave_sine;
+	double wave_trans;
+	double wave_trans_sine;
 };
 
 #endif //OW_OPENCL_SOLVER_H
