@@ -7,7 +7,8 @@ src/main.cpp \
 src/owHelper.cpp \
 src/owOpenCLSolver.cpp \
 src/owPhysicsFluidSimulator.cpp \
-src/owWorldSimulation.cpp
+src/owWorldSimulation.cpp \
+src/owMuscleNeuro.cpp
 
 TEST_SOURCES = src/test/owPhysicTest.cpp
 

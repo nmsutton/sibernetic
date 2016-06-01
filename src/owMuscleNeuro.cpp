@@ -62,7 +62,6 @@ vector<vector<double> > owMuscleNeuro::owImportNeuro(string in_filename) {
 	// char y[100];//
 
 	std::strcpy(y, x.c_str());
-	delete[] y;
 
 	ifstream inFile(y);
 	if (!inFile) {
@@ -80,6 +79,8 @@ vector<vector<double> > owMuscleNeuro::owImportNeuro(string in_filename) {
 
 		neuro_signals.push_back(new_signals_entry);
 	}
+
+	delete[] y;
 
 	return neuro_signals;
 }
