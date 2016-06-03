@@ -658,6 +658,9 @@ unsigned int owOpenCLSolver::_run_pcisph_computeForcesAndInitPressure(owConfigPr
  */
 unsigned int owOpenCLSolver::_run_pcisph_computeElasticForces(owConfigProperty * config)
 {
+	if (config->neuro_signals.empty()) {
+		config->neuro_signals = config->ow_muscle_neuro.owImportNeuro("/CompNeuro/Software/openworm/CElegansNeuroML/CElegans/pythonScripts/c302/examples/c302_A_Pharyngeal.dat");
+	}
 	if(config->numOfElasticP == 0 )
 		return 0;
 	pcisph_computeElasticForces.setArg( 0, neighborMap );
