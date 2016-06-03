@@ -658,8 +658,17 @@ unsigned int owOpenCLSolver::_run_pcisph_computeForcesAndInitPressure(owConfigPr
  */
 unsigned int owOpenCLSolver::_run_pcisph_computeElasticForces(owConfigProperty * config)
 {
+	//std::cout<<"\nneuro signals 2\n";
 	if (config->neuro_signals.empty()) {
 		config->neuro_signals = config->ow_muscle_neuro.owImportNeuro("/CompNeuro/Software/openworm/CElegansNeuroML/CElegans/pythonScripts/c302/examples/c302_A_Pharyngeal.dat");
+		/*std::cout<<"\nneuro signals\n";
+		for (int i = 0; i < config->neuro_signals.size(); i++) {
+			for (int i2 = 0; i2 < config->neuro_signals[i].size(); i2++) {
+				std::cout<<config->neuro_signals[i][i2];
+				std::cout<<" ";
+			}
+			std::cout<<"\n";//
+		}*/
 	}
 	if(config->numOfElasticP == 0 )
 		return 0;
