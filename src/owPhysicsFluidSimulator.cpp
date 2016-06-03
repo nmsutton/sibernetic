@@ -179,12 +179,6 @@ double owPhysicsFluidSimulator::simulationStep(const bool load_to)
 	do{
 		//printf("\n^^^^ iter %d ^^^^\n",iter);
 		ocl_solver->_run_pcisph_predictPositions(config);
-			//add to position_cpp
-	/*for (int i = 0; i < 1000; i++) {
-		position_cpp[i*4] -= 40;
-		position_cpp[i*4+1] -= 40;
-		position_cpp[i*4+2] -= 40;
-	}*/
 		ocl_solver->_run_pcisph_predictDensity(config);
 		ocl_solver->_run_pcisph_correctPressure(config);
 		ocl_solver->_run_pcisph_computePressureForceAcceleration(config);

@@ -46,6 +46,7 @@
 #include "owOpenCLConstant.h"
 #include "owPhysicsConstant.h"
 #include "owSignalSimulator.h"
+#include "owMuscleNeuro.h"
 
 struct owConfigProperty{
 	//This value defines boundary of box in which simulation is
@@ -209,6 +210,8 @@ public:
 	uint numOfBoundaryP;
 	uint numOfMembranes;
 	uint MUSCLE_COUNT;
+	vector<vector<double> > neuro_signals;
+	owMuscleNeuro ow_muscle_neuro;
 private:
 	/** Calculating delta parameter.
 	 *

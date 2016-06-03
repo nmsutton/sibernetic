@@ -37,8 +37,6 @@
 #include <sstream>
 
 #include "owOpenCLSolver.h"
-#include "math.h"
-#include "owMuscleNeuro.h"
 
 int myCompare( const void * v1, const void * v2 );
 
@@ -660,24 +658,9 @@ unsigned int owOpenCLSolver::_run_pcisph_computeForcesAndInitPressure(owConfigPr
  */
 unsigned int owOpenCLSolver::_run_pcisph_computeElasticForces(owConfigProperty * config)
 {
-	if (wave_sine == 0.0) {
-		wave_sine = 1.0;
+	if (config->neuro_signals.empty()) {
+		config->neuro_signals = config->ow_muscle_neuro.owImportNeuro("/CompNeuro/Software/openworm/CElegansNeuroML/CElegans/pythonScripts/c302/examples/c302_A_Pharyngeal.dat");
 	}
-	if (wave > 7) {
-	wave_sine *= -1;
-	}
-	if (wave < 0) {
-	wave_sine *= -1;
-	}
-	wave += 0.04*wave_sine;
-	//wave_trans = sin(wave)*0.1;
-	wave_trans = 0.0;
-	//vector<vector<double> > neuro_signals;
-	//neuro_signals =
-	//owMuscleNeuro::owMuscleNeuro ow_muscle_neuro = new owMuscleNeuro::owMuscleNeuro();
-	owMuscleNeuro ow_muscle_neuro;
-	//ow_muscle_neuro = new owMuscleNeuro();
-	ow_muscle_neuro.owImportNeuro("/CompNeuro/Software/openworm/CElegansNeuroML/CElegans/pythonScripts/c302/examples/c302_A_Pharyngeal.dat");
 	if(config->numOfElasticP == 0 )
 		return 0;
 	pcisph_computeElasticForces.setArg( 0, neighborMap );
@@ -696,8 +679,6 @@ unsigned int owOpenCLSolver::_run_pcisph_computeElasticForces(owConfigProperty *
 	pcisph_computeElasticForces.setArg( 13, muscle_activation_signal);
 	pcisph_computeElasticForces.setArg( 14, position);
 	pcisph_computeElasticForces.setArg( 15, elasticityCoefficient);
-	pcisph_computeElasticForces.setArg( 16, wave);
-	pcisph_computeElasticForces.setArg( 17, wave_trans);
 	int numOfElasticPCountRoundedUp = ((( config->numOfElasticP - 1 ) / local_NDRange_size ) + 1 ) * local_NDRange_size;
 	int err = queue.enqueueNDRangeKernel(
 		pcisph_computeElasticForces, cl::NullRange, cl::NDRange( numOfElasticPCountRoundedUp ),
