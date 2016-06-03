@@ -710,8 +710,7 @@ __kernel void pcisph_computeElasticForces(
 								  int MUSCLE_COUNT,
 								  __global float * muscle_activation_signal,
 								  __global float4 * position,
-								  float elasticityCoefficient,
-								  double neural_activity
+								  float elasticityCoefficient
 								  )
 {
 	int index = get_global_id( 0 );//it is the index of the elastic particle among all elastic particles but this isn't real id of particle
@@ -784,26 +783,6 @@ __kernel void pcisph_computeElasticForces(
 						acceleration[ id ] += -(vect_r_ij/r_ij) * delta_r_ij * elasticityCoefficient*0.5f;//*2.f/5.f;
 					}
 				}
-				
-				if (elasticConnectionsData[ idx + nc ].z > 1.0500000 & elasticConnectionsData[ idx + nc ].z < 1.1500000) {
-					//printf(" %f ",elasticConnectionsData[ idx + nc ].z);
-							//sortedPosition[ id ].y +=0.04;
-					//wave_trans = 
-					/*if (wave_trans > 90) {
-						wave_trans_sine *= -1;
-					}
-					if (wave_trans < 0) {
-						wave_trans_sine *= -1;
-					}*/
-					//wave_trans +=0.25;
-					//wave_trans +=1.0;
-					//float wave_change = sine_taylor(wave+wave_trans)*.1*.02;
-
-					//printf(" %f ",wave+wave_trans);
-					sortedPosition[ id ].z +=(.02+neural_activity);
-					// have neuro signals distributed automatically here propotional to numbor of total muscles found.
-					// muscles can be counted to prepare for the distribution before code is entered here
-				}				
 
 				for(i=0;i<MUSCLE_COUNT;i++)//check all muscles
 				{
