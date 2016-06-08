@@ -670,7 +670,13 @@ unsigned int owOpenCLSolver::_run_pcisph_computeElasticForces(owConfigProperty *
 			std::cout<<"\n";//
 		}*/
 	}
-	double neural_activity = -0.2;
+	//double neural_activity = -0.2;
+	//config->neural_activity = 0.2;
+	for (int i = 0; i < 20; i++) {
+		config->neural_activity[i] = (double) i*.01;
+	}
+	owOpenCLSolver::create_ocl_buffer("neural_activity", neural_activity,CL_MEM_READ_WRITE, config->neural_activity * sizeof(double) * 20);
+	owOpenCLSolver::copy_buffer_to_device(config->neural_activity, neural_activity, config->neural_activity * sizeof(double) * 20);
 	if(config->numOfElasticP == 0 )
 		return 0;
 	pcisph_computeElasticForces.setArg( 0, neighborMap );
@@ -689,7 +695,7 @@ unsigned int owOpenCLSolver::_run_pcisph_computeElasticForces(owConfigProperty *
 	pcisph_computeElasticForces.setArg( 13, muscle_activation_signal);
 	pcisph_computeElasticForces.setArg( 14, position);
 	pcisph_computeElasticForces.setArg( 15, elasticityCoefficient);
-	pcisph_computeElasticForces.setArg( 16, neural_activity);
+	pcisph_computeElasticForces.setArg( 16, config->neural_activity);
 	int numOfElasticPCountRoundedUp = ((( config->numOfElasticP - 1 ) / local_NDRange_size ) + 1 ) * local_NDRange_size;
 	int err = queue.enqueueNDRangeKernel(
 		pcisph_computeElasticForces, cl::NullRange, cl::NDRange( numOfElasticPCountRoundedUp ),
