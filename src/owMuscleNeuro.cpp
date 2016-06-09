@@ -55,7 +55,7 @@ vector<vector<double> > owMuscleNeuro::owImportNeuro(string in_filename) {
 	vector<double> new_signals_entry;
 	string signal;
 
-	cout<<"input file: "<<in_filename<<endl;
+	cout<<"input file:: "<<in_filename<<endl;
 
 	std::string x = "/CompNeuro/Software/openworm/CElegansNeuroML/CElegans/pythonScripts/c302/examples/c302_A_Pharyngeal.dat";
 	char *y = new char[x.length() + 1]; // or
@@ -69,16 +69,18 @@ vector<vector<double> > owMuscleNeuro::owImportNeuro(string in_filename) {
 		exit (EXIT_FAILURE);
 	}
 
+	//cout<<"\nneuro sig3\n";
 	string line;
 	while (getline(inFile, line)) {
 		if (line.empty()) continue;
 		stringstream signals_line(line);
 
 		new_signals_entry.clear();
-		while (signals_line >> signal) {new_signals_entry.push_back((double) string_to_double(signal));}
+		while (signals_line >> signal) {new_signals_entry.push_back((double) string_to_double(signal));}//cout<<signal;}
 
 		neuro_signals.push_back(new_signals_entry);
 	}
+	//cout<<"\nneuro sig4\n";
 
 	delete[] y;
 

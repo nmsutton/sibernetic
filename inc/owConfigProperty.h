@@ -212,6 +212,7 @@ public:
 	uint MUSCLE_COUNT;
 	vector<vector<double> > neuro_signals;
 	owMuscleNeuro ow_muscle_neuro;
+	double neural_activity[20];
 private:
 	/** Calculating delta parameter.
 	 *
