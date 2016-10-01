@@ -30,59 +30,32 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  *******************************************************************************/
-
-#include "owMuscleNeuro.h"
-
-owMuscleNeuro::owMuscleNeuro() {
-
-}
-
-double string_to_double( const std::string& s )
-/*
- * http://stackoverflow.com/questions/392981/how-can-i-convert-string-to-double-in-c
+/* 	owNeuronSimulator.h
+ * 	C++ part of NEURON <-> sibernetic bridge
+ * 	It will work if yo have NEURON simulator installed
+ * 	on your OS also you need install sibernetic_neuron bridge
+ * 	you can download it from github https://github.com/openworm/sibernetic_NEURON
+ *  Created on: Jun 27, 2016
+ *      Author: serg
  */
- {
-   std::istringstream i(s);
-   double x;
-   if (!(i >> x))
-     return 0;
-   return x;
- }
 
-vector<vector<double> > owMuscleNeuro::owImportNeuro(string in_filename) {
+#ifndef INC_OWNEURONSIMULATOR_H_
+#define INC_OWNEURONSIMULATOR_H_
 
-	vector<vector<double> > neuro_signals;
-	vector<double> new_signals_entry;
-	string signal;
+#if defined(_WIN32) || defined (_WIN64)
+  #include "C:/Python27/include/Python.h" // TODO make it optional
+#else
+  #include <Python.h>
+#endif
+#include <vector>
+#include <iostream>
+#include "owINeuronSimulator.h"
 
-	cout<<"input file:: "<<in_filename<<endl;
+class owNeuronSimulator: public owINeuronSimulator {
+public:
+	owNeuronSimulator(int muscleNumber, float timeStep, const std::string & modelFileName, const std::string & simFileName = "main");
+	std::vector<float> run();
+	virtual ~owNeuronSimulator();
+};
 
-	std::string x = "/CompNeuro/Software/openworm/CElegansNeuroML/CElegans/pythonScripts/c302/examples/c302_A_Pharyngeal.dat";
-	char *y = new char[x.length() + 1]; // or
-	// char y[100];//
-
-	std::strcpy(y, x.c_str());
-
-	ifstream inFile(y);
-	if (!inFile) {
-		cerr << "File "<<in_filename<<" not found." << endl;
-		exit (EXIT_FAILURE);
-	}
-
-	//cout<<"\nneuro sig3\n";
-	string line;
-	while (getline(inFile, line)) {
-		if (line.empty()) continue;
-		stringstream signals_line(line);
-
-		new_signals_entry.clear();
-		while (signals_line >> signal) {new_signals_entry.push_back((double) string_to_double(signal));}//cout<<signal;}
-
-		neuro_signals.push_back(new_signals_entry);
-	}
-	//cout<<"\nneuro sig4\n";
-
-	delete[] y;
-
-	return neuro_signals;
-}
+#endif /* INC_OWNEURONSIMULATOR_H_ */

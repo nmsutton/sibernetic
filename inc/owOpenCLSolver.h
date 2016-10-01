@@ -128,7 +128,6 @@ private:
                                             // this buffer contains MAX_MEMBRANES_INCLUDING_SAME_PARTICLE integer data cells per particle
                                             // each cell can contain -1 in case when no or no more membranes are associated with this particle,
                                             // or the index of corresponding membrane in membraneData list otherwise
-	cl::Buffer neural_activity;
 
 	// Kernels
 	cl::Kernel clearBuffers;
