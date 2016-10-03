@@ -171,9 +171,11 @@ class movement_angle:
 
 		V_1 = m.neurons_V[0][m.t][0]
 		V_2 = m.neurons_V[1][m.t][0]
-
+		'''
 		y[0] = ((m.w_max_vb/(1+np.exp(-(V_1-m.V_0_vb)/m.D_V_vb))) - \
 		(m.w_max_db/(1+np.exp(-(V_2-m.V_0_db)/m.D_V_db))))
+		'''
+		y[0] = m.sigmoid_out(sec_1, V_1) - m.sigmoid_out(sec_2, V_2)
 
 		return y
 
