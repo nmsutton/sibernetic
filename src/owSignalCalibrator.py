@@ -217,16 +217,16 @@ x = np.linspace(t_start,t_end,t_steps) # time points
 
 V = -25.001#-10.001 # inital voltage
 W = 22.9#25.0;#10; # target voltage
-Z = 0.02; # tau, speed limiting factor
-reset_V = -25 # refractor period reset voltage
+Z = 0.028; # tau, speed limiting factor
+reset_V = -25 # refractory period reset voltage
 lag_time = 0.0
 sn = single_neuron(V, W, Z, x, reset_V, lag_time)
 neuron_1_V = sn.neuron_out()
 
 V = -25.001
 W = 25.2
-Z = 0.025
-reset_V = -20
+Z = 0.0355
+reset_V = -20.0
 lag_time = 23.0
 sn_2 = single_neuron(V, W, Z, x, reset_V, lag_time)
 neuron_2_V = sn_2.neuron_out()
@@ -257,4 +257,5 @@ plt.subplot(3, 1, 3)
 plt.plot(x, neuron_1_V[:,0], x, neuron_2_V[:,0])
 plt.grid(True, color='0.9', linestyle='-', which='both', axis='both')
 plt.title('Neuron Voltage (mV)')
+plt.ylim(-50,100)
 plt.show()
