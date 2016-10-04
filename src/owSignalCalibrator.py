@@ -44,12 +44,6 @@ import scipy.integrate as de
 import matplotlib.pyplot as plt
 from scipy.integrate import ode
 
-# Initalization parameters
-V = -25.001#-10.001 # inital voltage
-W = 25.0;#10; # target voltage
-Z = 0.02; # tau, speed limiting factor
-x = np.linspace(0,0.5,200) # time points
-
 class single_neuron():
 	def __init__(neuron, V, W, Z, x, lag_time):
 		neuron.V = V		
@@ -130,16 +124,17 @@ class single_neuron():
 		return V	
 
 class movement_angle:
-	def __init__(m, sections, neurons_V, x):
+	def __init__(m, sections, neurons_V, time_params, x):
 		m.a = 0.0 # angle
-		m.da = 0.0 # angle derivative
+		#m.da = 0.0 # angle derivative
 		m.sections = sections
 		m.neurons_V = neurons_V
 		m.t = 0
-		m.t_counter = 0
-		m.old_x = 0
+		m.old_t = 0		
+		#m.t_counter = 0
+		m.du = []
 		m.x = x		
-		m.x_rounded = [ '%.9f' % elem for elem in x.tolist() ]
+		#m.x_rounded = [ '%.9f' % elem for elem in x.tolist() ]
 		m.x_int = range(len(x))
 		m.w_max_db = 9951
 		m.w_max_vb = 6987
@@ -147,6 +142,9 @@ class movement_angle:
 		m.D_V_vb = 0.2888
 		m.V_0_db = 25.0
 		m.V_0_vb = 22.8
+		m.start = time_params[0]
+		m.end = time_params[1]
+		m.steps = time_params[2]
 
 	def sigmoid_out(m, section, V):
 		w_max = 0.0
@@ -171,27 +169,30 @@ class movement_angle:
 
 		V_1 = m.neurons_V[0][m.t][0]
 		V_2 = m.neurons_V[1][m.t][0]
-		'''
-		y[0] = ((m.w_max_vb/(1+np.exp(-(V_1-m.V_0_vb)/m.D_V_vb))) - \
-		(m.w_max_db/(1+np.exp(-(V_2-m.V_0_db)/m.D_V_db))))
-		'''
-		y[0] = m.sigmoid_out(sec_1, V_1) - m.sigmoid_out(sec_2, V_2)
 
-		return y
+		#y[0] = m.sigmoid_out(sec_1, V_1) - m.sigmoid_out(sec_2, V_2)
+
+		return m.sigmoid_out(sec_1, V_1) - m.sigmoid_out(sec_2, V_2)#y
 
 	def angle_out(m):
 		mi = ode(m.angle_deriv).set_integrator('vode', method='adams',
 							order=10, atol=1e-6,
 							with_jacobian=False)
 
-		y = 20.0
+		y = 0.0
 		mi.set_initial_value(y, 0)
-		T = 0.5
-		dt = T/200
-		u = [];	t = []
+		T = m.end#0.5
+		dt = T/m.steps
+		u = [];	t = []; du = []
 		while mi.successful() and mi.t <= T:
 			#print(m.t)
+			m.old_t = m.t
 			m.t = int(1+mi.t*(1/dt))
+			if m.t < m.steps:
+				m.du.append(m.angle_deriv(t, y))
+			else:
+				m.t = m.old_t
+
 			mi.integrate(mi.t + dt)
 			'''
 			# apply rotation matrix
@@ -206,29 +207,52 @@ class movement_angle:
 
 		m.a = u
 
-		return m.a	
+		return m.a, m.du	
 
+# Initalization parameters
+t_start = 0
+t_end = 2.0#0.5#2.0
+t_steps = 800#200#800
+x = np.linspace(t_start,t_end,t_steps) # time points
+
+V = -25.001#-10.001 # inital voltage
+W = 23.0#25.0;#10; # target voltage
+Z = 0.02; # tau, speed limiting factor
 lag_time = 0.0
 sn = single_neuron(V, W, Z, x, lag_time)
 neuron_1_V = sn.neuron_out()
 
+V = -25.001#-10.001 # inital voltage
+W = 25.3#25.0;#10; # target voltage
+Z = 0.02; # tau, speed limiting factor
 lag_time = 23.0
 sn_2 = single_neuron(V, W, Z, x, lag_time)
 neuron_2_V = sn_2.neuron_out()
 
 sections = 'vb', 'db'
 neurons_V = neuron_1_V, neuron_2_V
-find_angle = movement_angle(sections, neurons_V, x)
-a_1 = find_angle.angle_out()
+time_params = t_start, t_end, t_steps
+find_angle = movement_angle(sections, neurons_V, time_params, x)
+a_1, du = find_angle.angle_out()
+du_len = len(du)
 #print(a_1)
+print(len(a_1))
+print(du_len)
 
-plt.subplot(2, 1, 1)
+
+plt.figure(1)
+plt.subplot(3, 1, 1)
+plt.plot(x, a_1[0:t_steps])
+plt.grid(True, color='0.9', linestyle='-', which='both', axis='both')
+plt.title(r"Bending Angle ${\Theta}$(deg)")
+
+plt.subplot(3, 1, 2)
+plt.plot(np.linspace(t_start,t_end,du_len), du)
+plt.grid(True, color='0.9', linestyle='-', which='both', axis='both')
+plt.title(r"Angle Derivative d${\Theta}$/dt (deg/s)")
+
+plt.subplot(3, 1, 3)
 plt.plot(x, neuron_1_V[:,0], x, neuron_2_V[:,0])
 plt.grid(True, color='0.9', linestyle='-', which='both', axis='both')
-plt.title('Neuron Voltage')
-
-plt.subplot(2, 1, 2)
-plt.plot(x, a_1)
-plt.grid(True, color='0.9', linestyle='-', which='both', axis='both')
-plt.title('Bending Angle')
+plt.title('Neuron Voltage (mV)')
 plt.show()
