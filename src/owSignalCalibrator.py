@@ -45,13 +45,13 @@ import matplotlib.pyplot as plt
 from scipy.integrate import ode
 
 class single_neuron():
-	def __init__(neuron, V, W, Z, x, lag_time):
+	def __init__(neuron, V, W, Z, x, reset_V, lag_time):
 		neuron.V = V		
 		neuron.W = W
 		neuron.Z = Z
 		neuron.x = x
 		neuron.target_V = W
-		neuron.reset_V = V + .001#-10.0		
+		neuron.reset_V = reset_V		
 		neuron.refrac_delay = 120#0.1
 		neuron.refrac_current = 0.0
 		neuron.refrac_toggle = False
@@ -216,17 +216,19 @@ t_steps = 800#200#800
 x = np.linspace(t_start,t_end,t_steps) # time points
 
 V = -25.001#-10.001 # inital voltage
-W = 23.0#25.0;#10; # target voltage
+W = 22.9#25.0;#10; # target voltage
 Z = 0.02; # tau, speed limiting factor
+reset_V = -25 # refractor period reset voltage
 lag_time = 0.0
-sn = single_neuron(V, W, Z, x, lag_time)
+sn = single_neuron(V, W, Z, x, reset_V, lag_time)
 neuron_1_V = sn.neuron_out()
 
-V = -25.001#-10.001 # inital voltage
-W = 25.3#25.0;#10; # target voltage
-Z = 0.02; # tau, speed limiting factor
+V = -25.001
+W = 25.2
+Z = 0.025
+reset_V = -20
 lag_time = 23.0
-sn_2 = single_neuron(V, W, Z, x, lag_time)
+sn_2 = single_neuron(V, W, Z, x, reset_V, lag_time)
 neuron_2_V = sn_2.neuron_out()
 
 sections = 'vb', 'db'
