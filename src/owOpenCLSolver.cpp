@@ -144,6 +144,9 @@ void owOpenCLSolver::initializeBuffers(const float * position_cpp, const float *
 	create_ocl_buffer( "sortedVelocity", sortedVelocity, CL_MEM_READ_WRITE, ( config->getParticleCount() * sizeof( float ) * 4 ) );
 	create_ocl_buffer( "velocity", velocity, CL_MEM_READ_WRITE, ( config->getParticleCount() * sizeof( float ) * 4 * (1 + 1/*1 extra, for membrane handling*/) ) );
 	create_ocl_buffer( "muscle_activation_signal", muscle_activation_signal, CL_MEM_READ_WRITE, ( config->MUSCLE_COUNT * sizeof( float ) ) );
+	create_ocl_buffer( "muscle_groups_oc", muscle_groups_oc, CL_MEM_READ_WRITE, ( 320 * sizeof( float ) ) );
+	create_ocl_buffer( "muscle_pids_oc", muscle_pids_oc, CL_MEM_READ_WRITE, ( 320 * sizeof( int ) ) );
+	//create_ocl_buffer( "muscle_number", muscle_number, CL_MEM_READ_WRITE, ( config->muscle_number * sizeof( uint ) ) );
 
 	if(membraneData_cpp != NULL && particleMembranesList_cpp != NULL)
 	{
@@ -676,6 +679,9 @@ unsigned int owOpenCLSolver::_run_pcisph_computeElasticForces(owConfigProperty *
 	pcisph_computeElasticForces.setArg( 13, muscle_activation_signal);
 	pcisph_computeElasticForces.setArg( 14, position);
 	pcisph_computeElasticForces.setArg( 15, elasticityCoefficient);
+	pcisph_computeElasticForces.setArg( 16, config->muscle_number);
+	pcisph_computeElasticForces.setArg( 17, muscle_groups_oc);
+	pcisph_computeElasticForces.setArg( 18, muscle_pids_oc);
 	int numOfElasticPCountRoundedUp = ((( config->numOfElasticP - 1 ) / local_NDRange_size ) + 1 ) * local_NDRange_size;
 	int err = queue.enqueueNDRangeKernel(
 		pcisph_computeElasticForces, cl::NullRange, cl::NDRange( numOfElasticPCountRoundedUp ),
@@ -1120,6 +1126,20 @@ void owOpenCLSolver::updateMuscleActivityData(float *_muscle_activation_signal_c
 	copy_buffer_to_device( _muscle_activation_signal_cpp, muscle_activation_signal, config->MUSCLE_COUNT * sizeof( float ) );
 }
 
+void owOpenCLSolver::updateElasticConnectionsData(float *_elastic_connections_data_cpp, owConfigProperty * config)
+{
+	copy_buffer_to_device( _elastic_connections_data_cpp, elasticConnectionsData, config->numOfElasticP * MAX_NEIGHBOR_COUNT * sizeof(float) * 4 );
+}
+
+void owOpenCLSolver::updateMuscleGroupsOc(float *_muscle_groups_oc_cpp, owConfigProperty * config)
+{
+	copy_buffer_to_device( _muscle_groups_oc_cpp, muscle_groups_oc, 320 * sizeof( float ) );
+}
+
+void owOpenCLSolver::updateMusclePidsOc(int *_muscle_pids_oc_cpp, owConfigProperty * config)
+{
+	copy_buffer_to_device( _muscle_pids_oc_cpp, muscle_pids_oc, 320 * sizeof( int ) );
+}
 
 /** Destructor
  *

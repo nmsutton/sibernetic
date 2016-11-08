@@ -107,6 +107,8 @@ public:
 	 *  @return membraneData_cpp
 	 */
 	float * getMuscleAtcivationSignal() const { return muscle_activation_signal_cpp; }
+	float * getMuscleGroups() { return muscle_groups_oc; }
+	int * getMusclePids() { return muscle_pids_oc; }
 	double  simulationStep(const bool load_to = false);
 	/** Getter for config
 	 *  @return config
@@ -127,6 +129,8 @@ private:
 	int   * particleMembranesList_cpp;
 	//Muscle contraction data buffer
 	float * muscle_activation_signal_cpp;
+	float * muscle_groups_oc;
+	int * muscle_pids_oc;
 	//Helper arrays for displaying information about density changes
 	float * density_cpp;
 	unsigned int * particleIndex_cpp;

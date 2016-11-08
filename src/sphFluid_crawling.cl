@@ -710,7 +710,12 @@ __kernel void pcisph_computeElasticForces(
 								  int MUSCLE_COUNT,
 								  __global float * muscle_activation_signal,
 								  __global float4 * position,
-								  float elasticityCoefficient
+								  float elasticityCoefficient,
+								  uint muscle_number,
+								  __global float * muscle_groups_oc,
+								  __global int * muscle_pids_oc
+								  // std::vector<std::vector<int> > muscle_groups(5, std::vector<int>())
+								  //__global uint * muscle_number
 								  )
 {
 	int index = get_global_id( 0 );//it is the index of the elastic particle among all elastic particles but this isn't real id of particle
@@ -732,8 +737,11 @@ __kernel void pcisph_computeElasticForces(
 	int i;
 	int L_index_i,L_index_j;
 	id_sp = PI_SERIAL_ID( particleIndex[id] );
+	//printf("X ");					
 	do
 	{
+		//printf("%d %d ",(int)elasticConnectionsData[ idx + nc ].x,(int)elasticConnectionsData[ idx + nc ].z);
+		//printf("%d ",id_sp);
 		if( (jd = (int)elasticConnectionsData[ idx + nc ].x) != NO_PARTICLE_ID )
 		{
 			jd = particleIndexBack[jd];
@@ -784,17 +792,73 @@ __kernel void pcisph_computeElasticForces(
 					}
 				}
 
-				for(i=0;i<MUSCLE_COUNT;i++)//check all muscles
-				{
-					if((int)(elasticConnectionsData[idx+nc].z)==(i+1))//contractible spring, = muscle
-					{
-						if(muscle_activation_signal[i]>0.f)
-						{
-							if( (L_index_i!=L_index_j) && (((L_index_i<-80)&&(L_index_j<-80)) || ((L_index_i>80)&&(L_index_j>80))) )
-							acceleration[ id ] += -(vect_r_ij/r_ij) * muscle_activation_signal[i] * (900.0f) * 0.4f * /*3.25e-14f*/ 1.0e-13f / mass;
-							else
-							acceleration[ id ] += -(vect_r_ij/r_ij) * muscle_activation_signal[i] * (900.0f) * /*3.25e-14f*/ 1.0e-13f / mass; // mass was forgotten here
+				// process muscle particle ids
+				for(int i_2 = 0; i_2 < 320; i_2++) {
+					if ((int)elasticConnectionsData[ idx + nc ].x == muscle_pids_oc[i_2]) {//} & \
+						//muscle_groups_oc[318] >= 100) {
+						//acceleration[ id ] += muscle_groups_oc[i_2]*5;
+						//acceleration[ id ] += muscle_activation_signal[i_2]*5;
+						if (muscle_groups_oc[318] >= 100) {
+							//position[id_sp].x += muscle_activation_signal[i_2]*2000;//20;
+							//printf("interation %f\n",muscle_groups_oc[318]);
+							//sortedPosition[id].x += muscle_activation_signal[i_2]*.002;//20;
+							sortedPosition[id].x += muscle_groups_oc[315]*muscle_activation_signal[i_2]*.0002;//20;
+							sortedPosition[id].y += muscle_groups_oc[316]*muscle_activation_signal[i_2]*.0002;//20;
+							sortedPosition[id].z += muscle_groups_oc[317]*muscle_activation_signal[i_2]*.0002;//20;
 						}
+						//printf("%d ",(int)elasticConnectionsData[ idx + nc ].x);
+					}
+				}
+
+				//if (muscle_groups_oc[318] >= 100) {
+				//	printf("\n~~~~~~~~~~~~~~~~~~~~interation %f~~~~~~~~~~~~~~~~~~~\n",muscle_groups_oc[318]);
+				//}
+
+				for(i=0;i<2;i++)//i<MUSCLE_COUNT;i++)//check all muscles
+				{
+					//if((int)(elasticConnectionsData[idx+nc].z)==(i+1))//contractible spring, = muscle
+
+					//printf("%d ",(int)elasticConnectionsData[ idx + nc ].x);
+					//printf("X ");					
+					if((int)(elasticConnectionsData[idx+nc].z)==(1))//contractible spring, = muscle
+					{
+						//muscle_number = muscle_number + 1;
+						//printf("\n%d",id);
+						//if(muscle_activation_signal[i]>0.f)
+						//{
+						/*if (MUSCLE_COUNT > 0.f){
+							printf("\nmc: %d\n",MUSCLE_COUNT);
+						}*/
+
+							//if( (L_index_i!=L_index_j) && (((L_index_i<-80)&&(L_index_j<-80)) || ((L_index_i>80)&&(L_index_j>80))) )
+							//acceleration[ id ] += -(vect_r_ij/r_ij) * muscle_activation_signal[i] * (900.0f) * 0.4f * /*3.25e-14f*/ 1.0e-13f / mass;
+							//else
+							//acceleration[ id ] += -(vect_r_ij/r_ij) * muscle_activation_signal[i] * (900.0f) * /*3.25e-14f*/ 1.0e-13f / mass; // mass was forgotten here
+
+							/*for(int i_2 = 0; i_2 < 80; i_2++) {
+								if (id == muscle_groups_oc[i_2]) {
+									printf("%d ",id);
+								}
+								//printf("%d ",id);
+							}*/
+
+							/*for(int i_2 = 0; i_2 < 320; i_2++) {
+								if ((int)elasticConnectionsData[ idx + nc ].x == muscle_pids_oc[i_2]) {
+									acceleration[ id ] += muscle_groups_oc[i_2]*10;
+									//printf("%d ",(int)elasticConnectionsData[ idx + nc ].x);
+								}
+							}*/
+							//printf("%d ",muscle_pids_oc[0]);
+							//printf("%d ",(int)elasticConnectionsData[ idx + nc ].x);
+							//printf("|%d %d %d|",jd, id_sp, jd_sp);
+							//printf("%d ",(int)elasticConnectionsData[idx+nc].z);
+							//printf("%d ",muscle_activation_signal[1]* 0.4f * 1.0e-13f / mass);
+							//printf("%d %d %d %d %d %d %d %d %d %d ",(float)muscle_groups_oc[0],(float)muscle_groups_oc[1],(float)muscle_groups_oc[2],(float)muscle_groups_oc[3],(float)muscle_groups_oc[4],muscle_groups_oc[5],muscle_groups_oc[6],muscle_groups_oc[7],muscle_groups_oc[8],muscle_groups_oc[9]);
+							//printf("%d %d %d %d %d %d %d %d %d %d ",muscle_pids_oc[0],muscle_pids_oc[1],muscle_pids_oc[2],muscle_pids_oc[3],muscle_pids_oc[4],muscle_pids_oc[5],muscle_pids_oc[6],muscle_pids_oc[7],muscle_pids_oc[8],muscle_pids_oc[9]);
+							//printf("%d %d ",L_index_i,L_index_j);
+							//printf("%d %d ",(int)elasticConnectionsData[ idx + nc ].x,jd);
+							//printf("X ");
+						//}
 					} // -l_to logstep=1000 -no_g
 				}
 			}

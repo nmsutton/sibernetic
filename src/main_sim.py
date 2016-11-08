@@ -167,7 +167,7 @@ if __name__ == '__main__':
     print("Running it directly in Python will only plot the waves being generated for sending to the muscle cells...")
     
     ms = MuscleSimulation()
-    ms = C302Simulation('configuration/test/c302/c302_B_Muscles.muscles.activity.dat')
+    #ms = C302Simulation('configuration/test/c302/c302_B_Muscles.muscles.activity.dat')
     #ms = C302Simulation('../../../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/TestMuscles.activity.dat')
     #ms = C302Simulation('../../neuroConstruct/osb/invertebrate/celegans/CElegansNeuroML/CElegans/pythonScripts/c302/c302_B_Muscles.muscles.activity.dat')
     
@@ -191,7 +191,8 @@ if __name__ == '__main__':
     steps_between_plots = int(num_steps/num_plots)
     
     
-    l = ms.run(skip_to_time=0.03)
+    #l = ms.run(skip_to_time=0.03)
+    l = ms.run()
         
         
     for step in range(num_steps):

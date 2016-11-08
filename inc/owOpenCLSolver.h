@@ -79,6 +79,9 @@ public:
 	unsigned int _run_computeInteractionWithMembranes_finalize(owConfigProperty * config);
 	//
 	void updateMuscleActivityData(float *_muscle_activation_signal_cpp, owConfigProperty * config);
+	void updateElasticConnectionsData(float *_elastic_connections_data_cpp, owConfigProperty * config);
+	void updateMuscleGroupsOc(float *_muscle_groups_oc_cpp, owConfigProperty * config);
+	void updateMusclePidsOc(int *_muscle_pids_oc_cpp, owConfigProperty * config);
 
 	void read_position_buffer( float * position_cpp, owConfigProperty * config) { copy_buffer_from_device( position_cpp, position, config->getParticleCount() * sizeof( float ) * 4 ); };
 	void read_velocity_buffer( float * velocity_cpp, owConfigProperty * config) { copy_buffer_from_device( velocity_cpp, velocity, config->getParticleCount() * sizeof( float ) * 4 ); };
@@ -128,6 +131,9 @@ private:
                                             // this buffer contains MAX_MEMBRANES_INCLUDING_SAME_PARTICLE integer data cells per particle
                                             // each cell can contain -1 in case when no or no more membranes are associated with this particle,
                                             // or the index of corresponding membrane in membraneData list otherwise
+	//cl::Buffer muscle_number;
+	cl::Buffer  muscle_groups_oc;
+	cl::Buffer  muscle_pids_oc;
 
 	// Kernels
 	cl::Kernel clearBuffers;

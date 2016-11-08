@@ -60,6 +60,8 @@ owPhysicsFluidSimulator::owPhysicsFluidSimulator(owHelper * helper,int argc, cha
 		position_cpp = new float[ 4 * config->getParticleCount() ];
 		velocity_cpp = new float[ 4 * config->getParticleCount() ];
 		muscle_activation_signal_cpp = new float [config->MUSCLE_COUNT];
+		muscle_groups_oc = new float [320];
+		muscle_pids_oc = new int [320];
 		if(config->numOfElasticP != 0)
 			elasticConnectionsData_cpp = new float[ 4 * config->numOfElasticP * MAX_NEIGHBOR_COUNT ];
 		if(config->numOfMembranes<=0)
@@ -226,18 +228,183 @@ double owPhysicsFluidSimulator::simulationStep(const bool load_to)
 	}
 
 	float correction_coeff;
+	float neural_signal;
+
+	int m_counter;
+	int ptype_i = 0, ptype_i_2 = 0;
+	bool muscle_found = false;
+	float pos_x = 0, pos_y = 0, pos_z = 0;
+	if (iterationCount==0) {m_counter = 0;}
+
+	std::vector<int> muscle_collection;
+	/* determine id and group of each muscle particle */
+	for (int i = 0; i < config->numOfElasticP;i=i+1) {
+		ptype_i = (i*MAX_NEIGHBOR_COUNT*4)+2; // 3 is interval where ptype index is stored
+		muscle_found = false;
+		for (int j = 0; j < MAX_NEIGHBOR_COUNT; j++) {
+			ptype_i_2 =  ptype_i + (j*4); // increase by 4 is for next neighbor entry
+			if (i == 150 or i == 149 or i == 151 or i == 561 or i == 559 or i == 560) {
+				elasticConnectionsData_cpp[ptype_i_2] = 1.1;
+			}
+			if (elasticConnectionsData_cpp[ptype_i_2] >= 1 && elasticConnectionsData_cpp[ptype_i_2] < 2) {
+
+				if (iterationCount==0) {
+					pos_x = position_cpp[(i*4)+0];
+					pos_y = position_cpp[(i*4)+1];
+					pos_z = position_cpp[(i*4)+2];
+					//if (pos_y <= 69.5) {
+					//if (pos_x <= 73) {
+					if ((pos_x <= 73 & pos_z <= 71.9) or \
+						(pos_x >= 73 & pos_z >= 71.9)) {
+					//if (pos_x <= 65.5) {
+					//if (pos_z <= 71.9) {					
+						elasticConnectionsData_cpp[ptype_i_2] = 1.5;
+						//m_counter++;
+					}
+					else {
+						elasticConnectionsData_cpp[ptype_i_2] = 1.1;
+					}
+				}
+
+				muscle_found = true;
+			}
+			//std::cout<<elasticConnectionsData_cpp[ptype_i_2]<<" ";
+		}
+		if (muscle_found == true) {
+			muscle_collection.push_back(i);
+			//m_counter++;
+		}
+	}
+
+	if (iterationCount==0) {
+		ocl_solver->updateElasticConnectionsData(elasticConnectionsData_cpp, config);
+	}
+
+	int muscles_size = muscle_collection.size();
+	//	std::vector<std::vector<int> > muscle_groups[4][muscles_size];
+	//std::vector<std::vector<int> > muscle_groups(muscles_size, std::vector<int>(muscles_size/4));
+	/*std::vector<float> muscle_groups(muscles_size);
+	std::vector<int> muscle_pids(muscles_size);*/
+	/*std::cout<<"mc \n";
+	std::cout<<"\nsize "<<muscles_size<<"\n";
+	std::cout<<"\n"<<muscle_groups[1].size()<<" ";*/
+	int muscle_pid = 0;
+	if (iterationCount==0) {
+		//m_counter = 0;	
+		for (int i = 0; i < muscles_size; i++) {
+			muscle_pid = muscle_collection[i];
+			neural_signal = config->get_example_angle_out(iterationCount);
+			pos_x = position_cpp[(muscle_pid*4)+0];
+			pos_y = position_cpp[(muscle_pid*4)+1];
+			pos_z = position_cpp[(muscle_pid*4)+2];
+
+			//if (pos_y <= 69.5) {
+			//if (pos_x <= 60.0) {
+			//if (pos_x <= 65.5) {
+			if (pos_x <= 73.0) {
+			//if (pos_z <= 71.9) {
+				muscle_groups_oc[i] = 2.0f;
+				m_counter++;
+			}
+			//std::cout<<"|"<<pos_x<<" "<<pos_y<<" "<<pos_z;
+
+			muscle_pids_oc[i] = muscle_pid;		
+		}
+		muscle_groups_oc[319] = m_counter;
+	}
+
+	/*
+	Find anchor points
+	*/
+	muscle_pid = 150;
+	float vertical_start[] = {position_cpp[(muscle_pid*4)+0], position_cpp[(muscle_pid*4)+1], position_cpp[(muscle_pid*4)+2]};
+	muscle_pid = 561;
+	float vertical_end[] = {position_cpp[(muscle_pid*4)+0], position_cpp[(muscle_pid*4)+1], position_cpp[(muscle_pid*4)+2]};
+	muscle_pid = 87;
+	float horizontal_start[] = {position_cpp[(muscle_pid*4)+0], position_cpp[(muscle_pid*4)+1], position_cpp[(muscle_pid*4)+2]};
+	muscle_pid = 85;
+	float horizontal_end[] = {position_cpp[(muscle_pid*4)+0], position_cpp[(muscle_pid*4)+1], position_cpp[(muscle_pid*4)+2]};	
+	//muscle_pid = center;
+	//float center_point[] = {position_cpp[(muscle_pid*4)+0], position_cpp[(muscle_pid*4)+1], position_cpp[(muscle_pid*4)+2]};
+	float forward_move[] = {(horizontal_end[0] - horizontal_start[0]), (horizontal_end[1] - horizontal_start[1]), (horizontal_end[2] - horizontal_start[2])};
+	//float reverse_move[] = {(horizontal_start[0] - center_point[0]), (horizontal_start[1] - center_point[1]), (horizontal_start[2] - center_point[2])};	
+	muscle_groups_oc[315] = forward_move[0];
+	muscle_groups_oc[316] = forward_move[1];
+	muscle_groups_oc[317] = forward_move[2];
+	float move_scaling = 0.05;
+
+	int p_type;
+	int m;
+	for (int i = 0; i < muscles_size; i++) {
+		neural_signal = config->get_example_angle_out(iterationCount);
+		p_type = muscle_groups_oc[i];
+		m = muscle_collection[i];
+		if ((p_type >= 1.8 and p_type <= 2.2) or \
+			(p_type >= 2.8 and p_type <= 3.2)) {
+			////////// last commented out 11/05/16 //////////
+			muscle_activation_signal_cpp[i] = neural_signal*-1;
+			/////////////////////////////////////////////////			
+			/*
+			position_cpp[(m*4)+0] += forward_move[0] * move_scaling * neural_signal * -1; // x
+			position_cpp[(m*4)+1] += forward_move[1] * move_scaling * neural_signal * -1; // y
+			position_cpp[(m*4)+2] += forward_move[2] * move_scaling * neural_signal * -1; // z
+			*/
+		}
+		else {
+			////////// last commented out 11/05/16 //////////
+			muscle_activation_signal_cpp[i] = neural_signal;//*-1;	
+			/////////////////////////////////////////////////
+			/*
+			position_cpp[(m*4)+0] += forward_move[0] * move_scaling * neural_signal; // x
+			position_cpp[(m*4)+1] += forward_move[1] * move_scaling * neural_signal; // y
+			position_cpp[(m*4)+2] += forward_move[2] * move_scaling * neural_signal; // z			
+			*/
+		}	
+	}
 	
-	for(unsigned int i=0;i<config->MUSCLE_COUNT;++i)
+	/*for(unsigned int i=0;i<=1;++i)//config->MUSCLE_COUNT;++i)//i<=0;++i)//
 	{ 
 		correction_coeff = sqrt( 1.f - ((1+i%24-12.5f)/12.5f)*((1+i%24-12.5f)/12.5f) );
 		//printf("\n%d\t%d\t%f\n",i,1+i%24,correction_coeff);
-		muscle_activation_signal_cpp[i] *= correction_coeff; 
+		neural_signal = config->get_example_angle_out(iterationCount);
+		muscle_activation_signal_cpp[1] += neural_signal*.07;//.7;
+		//muscle_activation_signal_cpp[0] = -20.0*.07;//neural_signal*.07;//.7;
+		muscle_activation_signal_cpp[i] *= correction_coeff;//0.39191836   0.5425864		
+		//muscle_activation_signal_cpp[i] *= 0.39191836;//   0.5425864		
 
-	}
+		//if (i == 0) {
+		//	std::cout<<"\nCurrent timestep:\t"<<iterationCount<<"\tp1\t"<<muscle_activation_signal_cpp[2]<<"\tm count\t"<<sizeof(muscle_activation_signal_cpp)/sizeof(float)<<"\t"<<muscle_activation_signal_cpp[i]<<"\t"<<config->get_example_angle_out(iterationCount)<<"\n";
+		//	std::cout<<"\nm_counter:"<<m_counter<<"\n";
+		//}
+
+	}*/
+	//std::cout<<muscle_groups[0].size()<<" ";
+	//std::cout<<"\n\nmuscle pids: "<<sizeof(muscle_pids_oc)/sizeof(int())<<" \n\n";
+	//std::cout<<"\n\nmuscle pids: "<<muscles_size<<" \n\n";
+	std::cout<<"\n\nmuscle counter: "<<m_counter<<" \n\n";
+	std::cout<<"\n\nmuscle_groups_oc[319]: "<<muscle_groups_oc[319]<<" \n\n";
+	//std::cout<<"\n";
+	//uint muscle_number_cpp = 5;
+	//owOpenCLSolver::copy_buffer_to_device(muscle_number_cpp, muscle_number, sizeof( uint ));
+	config->set_muscle_number(config->get_muscle_number()+1);	
 
 	config->updateNeuronSimulation(muscle_activation_signal_cpp);
 
 	ocl_solver->updateMuscleActivityData(muscle_activation_signal_cpp, config);
+	//ocl_solver->updateMuscleGroupsOc((float*) &muscle_groups_oc, config);	
+	muscle_groups_oc[318] = iterationCount;//iterationCount;	
+	std::cout<<"\nmuscle_groups_oc[318] "<<muscle_groups_oc[318]<<"\n";
+	ocl_solver->updateMuscleGroupsOc(muscle_groups_oc, config);	
+	ocl_solver->updateMusclePidsOc(muscle_pids_oc, config);	
+	/*std::cout<<(float*) &muscle_groups_oc[0]<<" "<<muscle_groups_oc[1]<<" "<<muscle_groups_oc[2]<<" " \
+	<<(float*) &muscle_groups_oc[3]<<" "<<(float*) &muscle_groups_oc[4]<<" "<<(float*) &muscle_groups_oc[5]<<" " \
+	<<(float*) &muscle_groups_oc[6]<<" "<<(float*) &muscle_groups_oc[7]<<" "<<(float*) &muscle_groups_oc[8]<<" ";
+	*/
+	/*
+	float * muscle_groups_cpp = getMuscleGroups();
+	std::cout<<"\n\n"<<muscle_groups_cpp[10]<<"\n\n";
+	*/
+	//std::cout<<"\n\nnumOfElasticP: "<<config->numOfElasticP<<"\n\n";
 	iterationCount++;
 	return helper->getElapsedTime();
 }
