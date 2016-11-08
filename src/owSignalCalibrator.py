@@ -211,8 +211,8 @@ class movement_angle:
 
 # Initalization parameters
 t_start = 0
-t_end = 8.0#0.5#2.0
-t_steps = int(t_end*400)#200#800
+t_end = 2.0#0.5#2.0
+t_steps = 800#200#800
 x = np.linspace(t_start,t_end,t_steps) # time points
 
 V = -25.001#-10.001 # inital voltage
@@ -241,7 +241,7 @@ du_len = len(du)
 print(len(a_1))
 print(du_len)
 
-'''
+
 plt.figure(1)
 plt.subplot(3, 1, 1)
 plt.plot(x, a_1[0:t_steps])
@@ -259,36 +259,3 @@ plt.grid(True, color='0.9', linestyle='-', which='both', axis='both')
 plt.title('Neuron Voltage (mV)')
 plt.ylim(-50,100)
 plt.show()
-'''
-
-# output example angle recording
-example_angle_out = []
-recording_length = 21
-for i in range(recording_length):
-	example_angle_out.extend(65*[-20.0])
-	up_trans = np.linspace(-20.0,20.0,12)
-	example_angle_out.extend(up_trans.tolist())	
-	example_angle_out.extend(70*[20.0])
-	down_trans = np.linspace(20.0,-20.0,7)
-	example_angle_out.extend(down_trans.tolist())
-
-print("length")
-print(len(example_angle_out))
-#print(example_angle_out)
-
-time_range = range(len(example_angle_out))
-out_file = open('examp_angle.dat', 'w')
-for i in time_range:
-	#line = str(time_range[i])+"\t"+str(example_angle_out[i])+"\r\n"
-	line = str(example_angle_out[i]) + " , "
-	out_file.write(line)
-print('example output written to file')
-
-'''
-plt.subplot(3, 1, 1)
-plt.plot(time_range, example_angle_out)
-plt.grid(True, color='0.9', linestyle='-', which='both', axis='both')
-plt.title(r"Bending Angle ${\Theta}$(deg)")
-plt.ylim(-22,22)
-plt.show()
-'''
