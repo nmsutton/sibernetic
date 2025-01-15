@@ -1,4 +1,4 @@
-### [For more details on Nate Sutton's work on OpenWorm click here](http://nmsutton.herokuapp.com/nmsuttondetails/OpenWormWork)
+### [For more details on Nate Sutton's work on OpenWorm click here](https://nsutton.com/Openworm-Project-Contributions/)
 
 ![Sibernetic](http://i.imgur.com/Hbsw6Zs.png)
 
